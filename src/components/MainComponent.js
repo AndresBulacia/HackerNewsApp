@@ -7,12 +7,14 @@ const MainComponent = () => {
   const [posts, setPosts] = useState([]);
   const[currentPage, setCurrentPage] = useState(1);
   const[totalPages, setTotalPages] = useState(0);
+  const postsPerPage = 8;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('https://hn.algolia.com/api/v1/search_by_date?query=reactjs&page=0');
-        setPosts(response.data.hits);
+        const response = await axios.get(`https://hn.algolia.com/api/v1/search_by_date?query=reactjs&page=${currentPage - 1}`);
+        const filteredPosts = response.data.hits.filter(post => post.author && post.story_title && post.story_url && post.created_at);
+        setPosts(filteredPosts);
         setTotalPages(response.data.nbPages);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -26,14 +28,19 @@ const MainComponent = () => {
     setCurrentPage(page);
   }
 
+  const startIndex = (currentPage - 1) * postsPerPage;
+  const endIndex = startIndex + postsPerPage;
+  const currentPosts = posts.slice(startIndex, endIndex);
+
   return (
     <div>
         <main className="main-container">
-        {posts.map((post, index) => (
+        {currentPosts.map((post, index) => (
             <div key={index} className="column">
-            <h3>{post.title}</h3>
+            <h3>{post.story_title}</h3>
             <p>Author: {post.author}</p>
-            {/* Mostrar otros detalles del post según la estructura de los datos de la API */}
+            <p>Created At: {post.created_at}</p>
+            <a href={post.story_url} target='_blank' rel='noopener noreferrer'>Read More</a>
             </div>
         ))}
         </main>
